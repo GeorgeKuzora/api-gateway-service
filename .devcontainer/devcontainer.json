@@ -1,5 +1,5 @@
 {
-    "name": "SHIFT Python 2024",
+    "name": "api-gateway-kuzora",
     "dockerComposeFile": "docker-compose.yml",
     "service": "app",
     "workspaceFolder": "/workspace",
@@ -32,12 +32,13 @@
                 "redhat.vscode-yaml",
                 "tamasfe.even-better-toml",
                 "njqdev.vscode-python-typehint",
-                "vscode-icons-team.vscode-icons"
+                "vscode-icons-team.vscode-icons",
+                "ms-python.flake8"
             ]
         }
     },
     "mounts": [
-        "source=shift-python-2024,target=/commandhistory,type=volume",
+        "source=dev-container-api-gateway-kuzora,target=/commandhistory,type=volume",
         "source=${env:HOME}${env:USERPROFILE}/.kube,target=/usr/local/share/kube-localhost,type=bind"
     ],
     "remoteUser": "root"
