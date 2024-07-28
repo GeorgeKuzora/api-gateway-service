@@ -5,12 +5,17 @@
         {
             "label": "Flake8",
             "type": "shell",
-            "command": "poetry run flake8 --jobs=1 src/app",
+            "command": "poetry run flake8 --jobs=1 src",
         },
         {
             "label": "ISort",
             "type": "shell",
-            "command": "poetry run isort src/app",
+            "command": "poetry run isort src",
+        },
+        {
+            "label": "Mypy",
+            "type": "shell",
+            "command": "poetry run mypy src/app",
         }
     ]
 }
