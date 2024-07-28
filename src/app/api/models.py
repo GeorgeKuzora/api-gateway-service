@@ -12,15 +12,13 @@ ValidationRules = namedtuple(
         'username_max_len',
         'password_max_len',
         'password_min_len',
-        'password_min_digits',
     ],
 )
 
 validation_rules = ValidationRules(
-    username_max_len=50,
+    username_max_len=50,  # noqa: WPS432 not magic
     password_max_len=100,
     password_min_len=8,
-    password_min_digits=2,
 )
 
 
@@ -35,7 +33,6 @@ class UserCredentials(BaseModel):
         title='Пароль пользователя',
         max_length=validation_rules.username_max_len,
         min_length=validation_rules.password_min_len,
-        max_digits=validation_rules.password_min_digits,
     )
 
 
@@ -52,8 +49,8 @@ class TransactionType(IntEnum):
     Может быть либо Продажа, либо Покупка.
     """
 
-    sell = 0
-    buy = 1
+    deposit = 0
+    withdraw = 1
 
 
 class Transaction(BaseModel):
@@ -64,7 +61,7 @@ class Transaction(BaseModel):
         max_length=validation_rules.username_max_len,
     )
     amount: Decimal = Field(title='Размер транзакции', gt=0)
-    transacton_type: TransactionType = Field(title='Тип транзакции')
+    transaction_type: TransactionType = Field(title='Тип транзакции')
     timestamp: datetime = Field(
         title='Дата совершения транзакции', le=datetime.now(),
     )
@@ -88,7 +85,7 @@ class ReportRequest(BaseModel):
     @model_validator(mode='after')
     def check_dates_match(self) -> Self:
         """Проверяет что даты соответствуют друг другу."""
-        if self.start_date < self.end_date:
+        if self.start_date > self.end_date:
             raise ValueError('дата начала периода больше даты конца периода')
         return self
 
