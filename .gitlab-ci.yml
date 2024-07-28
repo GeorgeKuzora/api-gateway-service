@@ -81,4 +81,4 @@ pytest-test-job:
         - '**/*'
       when: manual
   script:
-    - poetry run pytest --disable-warnings
+    - "poetry run pytest --disable-warnings"
