@@ -28,6 +28,8 @@ class Key(StrEnum):
     encoded_token = 'encoded_token'  # noqa: S105 key
     authorization = 'Authorization'
     transactions = 'transactions'
+    http_protocol_prefix = 'http://'
+    https_protocol_prefix = 'https://'
 
 
 @dataclass
@@ -38,15 +40,11 @@ class Client:
 
     async def get(self, *args, **kwargs) -> Any:
         """Метод GET."""
-        async with self.client as client:
-            response = await client.get(*args, **kwargs)
-        return response
+        return await self.client.get(*args, **kwargs)
 
     async def post(self, *args, **kwargs) -> Any:
         """Метод POST."""
-        async with self.client as client:
-            response = await client.post(*args, **kwargs)
-        return response
+        return await self.client.post(*args, **kwargs)
 
 
 class AuthServiceClient:
@@ -69,7 +67,7 @@ class AuthServiceClient:
         :rtype: Token
         :raises ServerError: В случае плохого ответа сервиса
         """
-        url = f'{self.host}:{self.port}/register'
+        url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/register'
         payload = user_creds.model_dump_json()
         resp = await self.client.post(
             url, json=payload,
@@ -99,7 +97,7 @@ class AuthServiceClient:
         :raises UnauthorizedError: неавторизирован
         :raises ServerError: ошибка сервера
         """
-        url = f'{self.host}:{self.port}/login'
+        url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/login'
         headers = {Key.authorization: authorization}
         resp = await self.client.post(
             url,
@@ -137,7 +135,7 @@ class AuthServiceClient:
         :raises UnauthorizedError: неавторизирован
         :raises ServerError: ошибка сервера
         """
-        url = f'{self.host}:{self.port}/check_token'
+        url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/check_token'
         headers = {Key.authorization: authorization}
         resp = await self.client.post(
             url=url,
@@ -179,7 +177,7 @@ class TransactionServiceClient:
         :rtype: Report
         :raises ServerError: Ошибка доступа
         """
-        url = f'{self.host}:{self.port}/create_report'
+        url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/create_report'
         resp = await self.client.post(
             url=url,
             json=report_request.model_dump_json(),
@@ -203,7 +201,7 @@ class TransactionServiceClient:
         :rtype: dict[str, str]
         :raises ServerError: При плохом ответе от сервиса
         """
-        url = f'{self.host}:{self.port}/create_transaction'
+        url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/create_transaction'  # noqa: E501 can't make shorter
         resp = await self.client.post(
             url=url,
             json=transaction.model_dump_json(),
