@@ -132,10 +132,23 @@ docker run --name api-gateway -p 127.0.0.1:8084:8000 api-gateway
 git clone https://hub.mos.ru/shift-python/y2024/homeworks/gkuzora/api-gateway-service.git
 ```
 
-Открыть директорию корень проекта. Инициализировать и обновить сабмодули проекта:
+Открыть директорию корень проекта:
 
 ```shell
-git submodule init && git submodule update
+cd <путь-к-проекту>
+```
+
+Переключиться на необходимую ветку git:
+
+```shell
+git checkout <имя-нужной-ветки>
+```
+
+Инициализировать и обновить сабмодули проекта:
+
+```shell
+git submodule init && \
+git submodule update --remote
 ```
 
 После выполнения команд выше, директории сабмодулей должны содержать необходимые файлы для работы с микросервисами, в том числе Dockerfile.
