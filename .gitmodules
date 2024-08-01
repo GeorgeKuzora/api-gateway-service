@@ -1,9 +1,12 @@
 [submodule "auth-service"]
 	path = auth-service
 	url = git@hub.mos.ru:shift-python/y2024/homeworks/gkuzora/w1hw1-auth-service.git
+	branch = feature/w3hw1-dockerfile
 [submodule "transaction-service"]
 	path = transaction-service
 	url = git@hub.mos.ru:shift-python/y2024/homeworks/gkuzora/w1hw1-transaction-service.git
+	branch = feature/w3hw1-dockerfile
 [submodule "face-verification-service"]
 	path = face-verification-service
 	url = git@hub.mos.ru:shift-python/y2024/homeworks/gkuzora/w1hw1-face-verification-service.git
+	branch = feature/w3hw1-dockerfile
