@@ -66,13 +66,18 @@ class AuthServiceClient:
         :return: Токен пользователя
         :rtype: Token
         :raises ServerError: В случае плохого ответа сервиса
+        :raises UnprocessableError: В случае неверного формата запроса
         """
         url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/register'
-        payload = user_creds.model_dump_json()
         resp = await self.client.post(
-            url, json=payload,
+            url, json=user_creds.model_dump(),
         )
-        if resp.status_code != status.HTTP_200_OK:
+        if resp.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY:
+            logger.error(
+                f'{url} {status.HTTP_422_UNPROCESSABLE_ENTITY}',  # noqa: E501
+            )
+            raise errors.UnprocessableError()
+        if resp.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR:
             logger.error(
                 f'{url} {status.HTTP_500_INTERNAL_SERVER_ERROR}',  # noqa: E501
             )
@@ -101,7 +106,7 @@ class AuthServiceClient:
         headers = {Key.authorization: authorization}
         resp = await self.client.post(
             url,
-            json=user_creds.model_dump_json(),
+            json=user_creds.model_dump(),
             headers=headers,
         )
         if resp.status_code == status.HTTP_401_UNAUTHORIZED:
@@ -180,7 +185,7 @@ class TransactionServiceClient:
         url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/create_report'
         resp = await self.client.post(
             url=url,
-            json=report_request.model_dump_json(),
+            json=report_request.model_dump(),
         )
         if resp.status_code == status.HTTP_200_OK:
             payload: dict[str, str | int] = resp.json()
@@ -204,7 +209,7 @@ class TransactionServiceClient:
         url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/create_transaction'  # noqa: E501 can't make shorter
         resp = await self.client.post(
             url=url,
-            json=transaction.model_dump_json(),
+            json=transaction.model_dump(),
         )
         if resp.status_code == status.HTTP_201_CREATED:
             logger.debug(f'транзакция создана: {transaction}')
