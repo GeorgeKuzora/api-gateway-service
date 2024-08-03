@@ -98,35 +98,18 @@ class AuthServiceClient:
         :type authorization: str
         :return: Токен пользователя
         :rtype: Token
-        :raises NotFoundError: данные не найдены
-        :raises UnauthorizedError: неавторизирован
-        :raises ServerError: ошибка сервера
         """
         url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/login'
-        headers = {Key.authorization: authorization}
+        headers = {str(Key.authorization): authorization}
         resp = await self.client.post(
             url,
             json=user_creds.model_dump(),
             headers=headers,
         )
-        if resp.status_code == status.HTTP_401_UNAUTHORIZED:
-            logger.error(
-                f'{url} {status.HTTP_401_UNAUTHORIZED}',
-            )
-            raise errors.UnauthorizedError()
-        elif resp.status_code == status.HTTP_404_NOT_FOUND:
-            logger.error(
-                f'{url} {status.HTTP_404_NOT_FOUND}',
-            )
-            raise errors.NotFoundError()
-        elif resp.status_code == status.HTTP_200_OK:
-            payload = resp.json()
-            return Token(token=payload.get(Key.encoded_token))
-
-        logger.error(
-            f'{url} {status.HTTP_500_INTERNAL_SERVER_ERROR}',
-        )
-        raise errors.ServerError()
+        errors.handle_status_code(resp.status_code)
+        logger.info(f'successful login for {user_creds.username}')
+        payload = resp.json()
+        return Token(token=payload.get(Key.encoded_token))
 
     async def check_token(
         self, authorization: Annotated[str, Header()],
@@ -136,9 +119,6 @@ class AuthServiceClient:
 
         :param authorization: Заголовок с токеном пользователя
         :type authorization: str
-        :raises NotFoundError: данные не найдены
-        :raises UnauthorizedError: неавторизирован
-        :raises ServerError: ошибка сервера
         """
         url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/check_token'
         headers = {str(Key.authorization): authorization}
@@ -146,17 +126,7 @@ class AuthServiceClient:
             url=url,
             headers=headers,
         )
-        if resp.status_code == status.HTTP_404_NOT_FOUND:
-            logger.info(f'{url} токен не найден')
-            raise errors.NotFoundError()
-        elif resp.status_code == status.HTTP_401_UNAUTHORIZED:
-            logger.info(f'{url} токен не валиден')
-            raise errors.UnauthorizedError()
-        elif resp.status_code == status.HTTP_200_OK:
-            logger.debug(f'{url}токен валиден')
-        else:
-            logger.error(f'{url} ошибка сервера')
-            raise errors.ServerError()
+        errors.handle_status_code(resp.status_code)
 
 
 class TransactionServiceClient:
@@ -180,19 +150,17 @@ class TransactionServiceClient:
         :type report_request: ReportRequest
         :return: Отчет о транзакциях
         :rtype: Report
-        :raises ServerError: Ошибка доступа
         """
         url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/create_report'
         resp = await self.client.post(
             url=url,
             json=report_request.model_dump(),
         )
-        if resp.status_code == status.HTTP_200_OK:
-            payload: dict[str, str | int] = resp.json()
-            return self._make_report(payload, report_request)
-
-        logger.error(f'{url} ошибка сервера')
-        raise errors.ServerError()
+        errors.handle_status_code(resp.status_code)
+        payload: dict[str, str | int] = resp.json()
+        report = self._make_report(payload, report_request)
+        logger.debug(f'Отчет получен: {report}')
+        return report
 
     async def create_transaction(
         self, transaction: Transaction,
@@ -204,26 +172,21 @@ class TransactionServiceClient:
         :type transaction: Transaction
         :return: Сообщение о успехе
         :rtype: dict[str, str]
-        :raises ServerError: При плохом ответе от сервиса
         """
         url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/create_transaction'  # noqa: E501 can't make shorter
         resp = await self.client.post(
             url=url,
             json=transaction.model_dump(),
         )
-        if resp.status_code == status.HTTP_201_CREATED:
-            logger.debug(f'транзакция создана: {transaction}')
-            return good_response
-        logger.error(f'{url} ошибка при создании транзации')
-        raise errors.ServerError()
+        errors.handle_status_code(resp.status_code)
+        logger.info(f'транзакция создана: {transaction}')
+        return good_response
 
     def _make_report(self, payload, request) -> Report:
         trasactions = self._make_transactions(payload.get(Key.transactions))
-        report = Report(
+        return Report(
             request=request, transactions=trasactions,
         )
-        logger.debug(f'Отчет получен: {report}')
-        return report
 
     def _make_transactions(
         self, transactions: list[dict] | None,  # type: ignore
