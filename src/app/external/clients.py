@@ -87,7 +87,7 @@ class AuthServiceClient:
     async def authenticate(
         self,
         user_creds: UserCredentials,
-        authorization: Annotated[str, Header()],
+        authorization: Annotated[str | None, Header()] = None,
     ) -> Token:
         """
         Метод аутентификации пользователя.
@@ -141,7 +141,7 @@ class AuthServiceClient:
         :raises ServerError: ошибка сервера
         """
         url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/check_token'
-        headers = {Key.authorization: authorization}
+        headers = {str(Key.authorization): authorization}
         resp = await self.client.post(
             url=url,
             headers=headers,
