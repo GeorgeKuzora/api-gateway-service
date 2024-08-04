@@ -52,7 +52,7 @@ def transaction_client_mocker(monkeypatch):
         mock_resp.status_code = status_code
         mock_resp.json.return_value = json
         mock_resp.headers = headers
-        client.get.return_value = mock_resp
+        client.post.return_value = mock_resp
         monkeypatch.setattr(
             'app.api.handlers.clients.transactions_client.client',
             client,
