@@ -5,7 +5,7 @@ from enum import StrEnum
 from typing import Annotated, Any
 
 import httpx
-from fastapi import Header, status
+from fastapi import Header
 
 from app.api.models import (
     Report,
@@ -65,23 +65,13 @@ class AuthServiceClient:
         :type user_creds: UserCredentials
         :return: Токен пользователя
         :rtype: Token
-        :raises ServerError: В случае плохого ответа сервиса
-        :raises UnprocessableError: В случае неверного формата запроса
         """
         url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/register'
         resp = await self.client.post(
             url, json=user_creds.model_dump(),
         )
-        if resp.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY:
-            logger.error(
-                f'{url} {status.HTTP_422_UNPROCESSABLE_ENTITY}',  # noqa: E501
-            )
-            raise errors.UnprocessableError()
-        if resp.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR:
-            logger.error(
-                f'{url} {status.HTTP_500_INTERNAL_SERVER_ERROR}',  # noqa: E501
-            )
-            raise errors.ServerError()
+        errors.handle_status_code(resp.status_code)
+        logger.info(f'successful register for {user_creds.username}')
         return Token(token=resp.json().get(Key.encoded_token, ''))
 
     async def authenticate(
@@ -127,6 +117,13 @@ class AuthServiceClient:
             headers=headers,
         )
         errors.handle_status_code(resp.status_code)
+
+    async def is_ready(self) -> None:
+        """Проверяет готовность сервиса к работе."""
+        url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/ready'  # noqa: E501 can't make shorter
+        resp = await self.client.get(url=url)
+        errors.handle_status_code(resp.status_code)
+        logger.info('authentication service is ready')
 
 
 class TransactionServiceClient:
@@ -181,6 +178,13 @@ class TransactionServiceClient:
         errors.handle_status_code(resp.status_code)
         logger.info(f'транзакция создана: {transaction}')
         return good_response
+
+    async def is_ready(self) -> None:
+        """Проверяет готовность сервиса к работе."""
+        url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/ready'  # noqa: E501 can't make shorter
+        resp = await self.client.get(url=url)
+        errors.handle_status_code(resp.status_code)
+        logger.info('transaction service is ready')
 
     def _make_report(self, payload, request) -> Report:
         trasactions = self._make_transactions(payload.get(Key.transactions))
