@@ -85,7 +85,7 @@ class TestRegister:
     async def test_valid_response(
         self, user_creds, client_builder, expected, request,
     ):
-        """Тестирует статут и тело ответа."""
+        """Тестирует статус и тело ответа."""
         client_builder = request.getfixturevalue(client_builder)
         client = client_builder(
             status_code=expected[Keys.status],
