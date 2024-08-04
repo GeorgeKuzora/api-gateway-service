@@ -93,7 +93,10 @@ http_errors = {
     status.HTTP_401_UNAUTHORIZED: UnauthorizedError,
 }
 
-good_status_codes = [status.HTTP_200_OK, status.HTTP_201_CREATED]
+good_status_codes = [
+    status.HTTP_200_OK,
+    status.HTTP_201_CREATED,
+]
 
 
 def handle_status_code(status_code: int):
