@@ -102,7 +102,12 @@ good_status_codes = [
 def handle_status_code(status_code: int):
     """Проверяет код ответа поднимает исключение при плохом коде ответа."""
     if status_code not in good_status_codes:
-        logger.error(
-            f'Recived bad status code {status_code}',
-        )
+        logger.error(f'Recived bad status code {status_code}')
         raise http_errors.get(status_code, ServerError)()
+
+
+def handle_healthz_status_code(status_code: int):
+    """Проверяет код ответа поднимает исключение при плохом коде ответа."""
+    if status_code != status.HTTP_200_OK:
+        logger.error(f'Recived bad status code {status_code}')
+        raise ServerError()

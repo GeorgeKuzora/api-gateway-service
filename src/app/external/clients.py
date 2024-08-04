@@ -148,7 +148,7 @@ class AuthServiceClient:
         """Проверяет готовность сервиса к работе."""
         url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/healthz/ready'  # noqa: E501 can't make shorter
         resp = await self.client.get(url=url)
-        errors.handle_status_code(resp.status_code)
+        errors.handle_healthz_status_code(resp.status_code)
         logger.info('authentication service is ready')
 
 
@@ -209,7 +209,7 @@ class TransactionServiceClient:
         """Проверяет готовность сервиса к работе."""
         url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/healthz/ready'  # noqa: E501 can't make shorter
         resp = await self.client.get(url=url)
-        errors.handle_status_code(resp.status_code)
+        errors.handle_healthz_status_code(resp.status_code)
         logger.info('transaction service is ready')
 
     def _make_report(self, payload, request) -> Report:
