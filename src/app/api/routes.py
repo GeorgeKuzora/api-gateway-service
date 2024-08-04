@@ -11,3 +11,4 @@ transaction = APIRouter(
     tags=['transaction'],
     dependencies=[Depends(clients.auth_client.check_token)],
 )
+healthz = APIRouter(prefix='/healthz', tags=['healthz'])
