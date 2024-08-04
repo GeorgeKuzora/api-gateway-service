@@ -146,7 +146,7 @@ class AuthServiceClient:
 
     async def is_ready(self) -> None:
         """Проверяет готовность сервиса к работе."""
-        url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/ready'  # noqa: E501 can't make shorter
+        url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/healthz/ready'  # noqa: E501 can't make shorter
         resp = await self.client.get(url=url)
         errors.handle_status_code(resp.status_code)
         logger.info('authentication service is ready')
@@ -207,7 +207,7 @@ class TransactionServiceClient:
 
     async def is_ready(self) -> None:
         """Проверяет готовность сервиса к работе."""
-        url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/ready'  # noqa: E501 can't make shorter
+        url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/healthz/ready'  # noqa: E501 can't make shorter
         resp = await self.client.get(url=url)
         errors.handle_status_code(resp.status_code)
         logger.info('transaction service is ready')
