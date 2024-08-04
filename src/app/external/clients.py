@@ -5,7 +5,8 @@ from enum import StrEnum
 from typing import Annotated, Any
 
 import httpx
-from fastapi import Header, UploadFile
+from fastapi import Header, UploadFile, Depends
+from fastapi.security import APIKeyHeader
 
 from app.api.models import (
     Report,
@@ -20,6 +21,11 @@ from config.config import get_settings
 logger = logging.getLogger(__name__)
 
 good_response = {'message': 'ok'}
+
+header_scheme = APIKeyHeader(
+    name='Authorization',
+    description='Токен аутентификации',
+)
 
 
 class Key(StrEnum):
@@ -49,7 +55,6 @@ class Client:
 
 class AuthServiceClient:
     """Клиент для доступа к сервису аутентификации."""
-
     def __init__(self, client: Client) -> None:
         """Метод инициализации."""
         settings = get_settings()
@@ -77,20 +82,20 @@ class AuthServiceClient:
     async def authenticate(
         self,
         user_creds: UserCredentials,
-        authorization: Annotated[str | None, Header()] = None,
+        token: Annotated[str, Depends(header_scheme)],
     ) -> Token:
         """
         Метод аутентификации пользователя.
 
         :param user_creds: Данные авторизации пользователя.
         :type user_creds: UserCredentials
-        :param authorization: токен пользователя
-        :type authorization: str
+        :param token: токен пользователя
+        :type token: str
         :return: Токен пользователя
         :rtype: Token
         """
         url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/login'
-        headers = {str(Key.authorization): authorization}
+        headers = {str(Key.authorization): token}
         resp = await self.client.post(
             url,
             json=user_creds.model_dump(),
@@ -128,16 +133,16 @@ class AuthServiceClient:
         return good_response
 
     async def check_token(
-        self, authorization: Annotated[str, Header()],
+        self, token: Annotated[str, Depends(header_scheme)],
     ) -> None:
         """
         Валидирует токен пользователя.
 
-        :param authorization: Заголовок с токеном пользователя
-        :type authorization: str
+        :param token: Заголовок с токеном пользователя
+        :type token: str
         """
         url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/check_token'
-        headers = {str(Key.authorization): authorization}
+        headers = {str(Key.authorization): token}
         resp = await self.client.post(
             url=url,
             headers=headers,
