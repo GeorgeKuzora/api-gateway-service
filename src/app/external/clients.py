@@ -5,7 +5,7 @@ from enum import StrEnum
 from typing import Annotated, Any
 
 import httpx
-from fastapi import Header
+from fastapi import Header, UploadFile
 
 from app.api.models import (
     Report,
@@ -100,6 +100,32 @@ class AuthServiceClient:
         logger.info(f'successful login for {user_creds.username}')
         payload = resp.json()
         return Token(token=payload.get(Key.encoded_token))
+
+    async def verify(
+        self,
+        user_creds: UserCredentials,
+        upload_file: UploadFile,
+    ) -> dict[str, str]:
+        """
+        Метод аутентификации пользователя.
+
+        :param user_creds: Данные авторизации пользователя.
+        :type user_creds: UserCredentials
+        :param upload_file: Изображение пользователя
+        :type upload_file: UploadFile
+        :return: Токен пользователя
+        :rtype: Token
+        """
+        url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/verify'
+        files = {'image': upload_file.file}
+        resp = await self.client.post(
+            url,
+            files=files,
+            data=user_creds.model_dump(),
+        )
+        errors.handle_status_code(resp.status_code)
+        logger.info(f'successful verification for {user_creds.username}')
+        return good_response
 
     async def check_token(
         self, authorization: Annotated[str, Header()],
