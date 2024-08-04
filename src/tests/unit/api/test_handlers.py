@@ -160,8 +160,8 @@ class TestLogin:
                     Key.body: valid_request_body,
                     Key.headers: invalid_request_headers,
                 },
-                status.HTTP_422_UNPROCESSABLE_ENTITY,
-                id='invalid request headers - response status 422',
+                status.HTTP_403_FORBIDDEN,
+                id='invalid request headers - response status 403',
             ),
             pytest.param(
                 {
@@ -261,8 +261,8 @@ class TestGetReport:
                     Key.body: valid_report_request,
                     Key.headers: invalid_request_headers,
                 },
-                status.HTTP_422_UNPROCESSABLE_ENTITY,
-                id='invalid request headers - response status 422',
+                status.HTTP_403_FORBIDDEN,
+                id='invalid request headers - response status 403',
             ),
             pytest.param(
                 {
@@ -462,8 +462,8 @@ class TestCreateTransaction:
                     Key.body: valid_transaction,
                     Key.headers: invalid_request_headers,
                 },
-                status.HTTP_422_UNPROCESSABLE_ENTITY,
-                id='invalid request headers - response status 422',
+                status.HTTP_403_FORBIDDEN,
+                id='invalid request headers - response status 403',
             ),
             pytest.param(
                 {
