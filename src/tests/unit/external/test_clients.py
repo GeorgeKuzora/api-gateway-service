@@ -1,5 +1,4 @@
 from datetime import datetime
-from decimal import Decimal
 from enum import StrEnum
 
 import pytest
@@ -299,7 +298,7 @@ class TestCreateTransaction:
     """Тестирует метод create_transaction."""
 
     username = 'george'
-    amount = Decimal(1)
+    amount = 1
     timestamp = datetime(year=2024, month=1, day=1)  # noqa: WPS432 test value
 
     test_transaction = Transaction(

@@ -5,7 +5,7 @@ from enum import StrEnum
 from typing import Annotated, Any
 
 import httpx
-from fastapi import Header, UploadFile, Depends
+from fastapi import Depends, UploadFile
 from fastapi.security import APIKeyHeader
 
 from app.api.models import (
@@ -55,6 +55,7 @@ class Client:
 
 class AuthServiceClient:
     """Клиент для доступа к сервису аутентификации."""
+
     def __init__(self, client: Client) -> None:
         """Метод инициализации."""
         settings = get_settings()
