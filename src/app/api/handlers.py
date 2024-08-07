@@ -23,10 +23,18 @@ def register(
     return token
 
 
+@routes.auth.post('/verify')
+def verify(
+    message: Annotated[dict[str, str], Depends(clients.auth_client.verify)],
+) -> dict[str, str]:
+    """Верифицирует пользователя."""
+    return message
+
+
 @routes.transaction.post('/transaction', status_code=status.HTTP_201_CREATED)
 def create_transaction(
     message: Annotated[dict[str, str], Depends(clients.transactions_client.create_transaction)],  # noqa: E501 anotation
-):
+) -> dict[str, str]:
     """Регистрирует пользователя."""
     return message
 
@@ -34,6 +42,6 @@ def create_transaction(
 @routes.transaction.post('/report')
 def create_report(
     report: Annotated[Report, Depends(clients.transactions_client.get_report)],
-):
+) -> Report:
     """Регистрирует пользователя."""
     return report

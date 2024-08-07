@@ -1,6 +1,5 @@
 from collections import namedtuple
 from datetime import datetime
-from decimal import Decimal
 from enum import IntEnum
 from typing import Self
 
@@ -60,7 +59,7 @@ class Transaction(BaseModel):
         title='Имя пользователя',
         max_length=validation_rules.username_max_len,
     )
-    amount: Decimal = Field(title='Размер транзакции', gt=0)
+    amount: int = Field(title='Размер транзакции', gt=0)
     transaction_type: TransactionType = Field(title='Тип транзакции')
     timestamp: datetime = Field(
         title='Дата совершения транзакции', le=datetime.now(),

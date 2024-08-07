@@ -1,5 +1,4 @@
 from datetime import datetime
-from decimal import Decimal
 from enum import StrEnum
 
 import pytest
@@ -85,7 +84,7 @@ class TestRegister:
     async def test_valid_response(
         self, user_creds, client_builder, expected, request,
     ):
-        """Тестирует статут и тело ответа."""
+        """Тестирует статус и тело ответа."""
         client_builder = request.getfixturevalue(client_builder)
         client = client_builder(
             status_code=expected[Keys.status],
@@ -299,7 +298,7 @@ class TestCreateTransaction:
     """Тестирует метод create_transaction."""
 
     username = 'george'
-    amount = Decimal(1)
+    amount = 1
     timestamp = datetime(year=2024, month=1, day=1)  # noqa: WPS432 test value
 
     test_transaction = Transaction(

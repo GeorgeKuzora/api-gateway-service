@@ -16,6 +16,9 @@
             "version": "3.12",
             "installTools": true,
             "toolsToInstall": ["poetry"]
+        },
+        "ghcr.io/duduribeiro/devcontainer-features/neovim:1": {
+            "version": "nightly"
         }
     },
     "remoteEnv": {

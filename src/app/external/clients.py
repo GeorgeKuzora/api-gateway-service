@@ -5,7 +5,8 @@ from enum import StrEnum
 from typing import Annotated, Any
 
 import httpx
-from fastapi import Header, status
+from fastapi import Depends, UploadFile
+from fastapi.security import APIKeyHeader
 
 from app.api.models import (
     Report,
@@ -21,6 +22,11 @@ logger = logging.getLogger(__name__)
 
 good_response = {'message': 'ok'}
 
+header_scheme = APIKeyHeader(
+    name='Authorization',
+    description='Токен аутентификации',
+)
+
 
 class Key(StrEnum):
     """Часто повторяемые ключи."""
@@ -28,6 +34,8 @@ class Key(StrEnum):
     encoded_token = 'encoded_token'  # noqa: S105 key
     authorization = 'Authorization'
     transactions = 'transactions'
+    http_protocol_prefix = 'http://'
+    https_protocol_prefix = 'https://'
 
 
 @dataclass
@@ -38,15 +46,11 @@ class Client:
 
     async def get(self, *args, **kwargs) -> Any:
         """Метод GET."""
-        async with self.client as client:
-            response = await client.get(*args, **kwargs)
-        return response
+        return await self.client.get(*args, **kwargs)
 
     async def post(self, *args, **kwargs) -> Any:
         """Метод POST."""
-        async with self.client as client:
-            response = await client.post(*args, **kwargs)
-        return response
+        return await self.client.post(*args, **kwargs)
 
 
 class AuthServiceClient:
@@ -67,93 +71,91 @@ class AuthServiceClient:
         :type user_creds: UserCredentials
         :return: Токен пользователя
         :rtype: Token
-        :raises ServerError: В случае плохого ответа сервиса
         """
-        url = f'{self.host}:{self.port}/register'
-        payload = user_creds.model_dump_json()
+        url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/register'
         resp = await self.client.post(
-            url, json=payload,
+            url, json=user_creds.model_dump(),
         )
-        if resp.status_code != status.HTTP_200_OK:
-            logger.error(
-                f'{url} {status.HTTP_500_INTERNAL_SERVER_ERROR}',  # noqa: E501
-            )
-            raise errors.ServerError()
+        errors.handle_status_code(resp.status_code)
+        logger.info(f'successful register for {user_creds.username}')
         return Token(token=resp.json().get(Key.encoded_token, ''))
 
     async def authenticate(
         self,
         user_creds: UserCredentials,
-        authorization: Annotated[str, Header()],
+        token: Annotated[str, Depends(header_scheme)],
     ) -> Token:
         """
         Метод аутентификации пользователя.
 
         :param user_creds: Данные авторизации пользователя.
         :type user_creds: UserCredentials
-        :param authorization: токен пользователя
-        :type authorization: str
+        :param token: токен пользователя
+        :type token: str
         :return: Токен пользователя
         :rtype: Token
-        :raises NotFoundError: данные не найдены
-        :raises UnauthorizedError: неавторизирован
-        :raises ServerError: ошибка сервера
         """
-        url = f'{self.host}:{self.port}/login'
-        headers = {Key.authorization: authorization}
+        url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/login'
+        headers = {str(Key.authorization): token}
         resp = await self.client.post(
             url,
-            json=user_creds.model_dump_json(),
+            json=user_creds.model_dump(),
             headers=headers,
         )
-        if resp.status_code == status.HTTP_401_UNAUTHORIZED:
-            logger.error(
-                f'{url} {status.HTTP_401_UNAUTHORIZED}',
-            )
-            raise errors.UnauthorizedError()
-        elif resp.status_code == status.HTTP_404_NOT_FOUND:
-            logger.error(
-                f'{url} {status.HTTP_404_NOT_FOUND}',
-            )
-            raise errors.NotFoundError()
-        elif resp.status_code == status.HTTP_200_OK:
-            payload = resp.json()
-            return Token(token=payload.get(Key.encoded_token))
+        errors.handle_status_code(resp.status_code)
+        logger.info(f'successful login for {user_creds.username}')
+        payload = resp.json()
+        return Token(token=payload.get(Key.encoded_token))
 
-        logger.error(
-            f'{url} {status.HTTP_500_INTERNAL_SERVER_ERROR}',
+    async def verify(
+        self,
+        user_creds: UserCredentials,
+        upload_file: UploadFile,
+    ) -> dict[str, str]:
+        """
+        Метод аутентификации пользователя.
+
+        :param user_creds: Данные авторизации пользователя.
+        :type user_creds: UserCredentials
+        :param upload_file: Изображение пользователя
+        :type upload_file: UploadFile
+        :return: Токен пользователя
+        :rtype: Token
+        """
+        url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/verify'
+        files = {'image': upload_file.file}
+        resp = await self.client.post(
+            url,
+            files=files,
+            data=user_creds.model_dump(),
         )
-        raise errors.ServerError()
+        errors.handle_status_code(resp.status_code)
+        logger.info(f'successful verification for {user_creds.username}')
+        return good_response
 
     async def check_token(
-        self, authorization: Annotated[str, Header()],
+        self, token: Annotated[str, Depends(header_scheme)],
     ) -> None:
         """
         Валидирует токен пользователя.
 
-        :param authorization: Заголовок с токеном пользователя
-        :type authorization: str
-        :raises NotFoundError: данные не найдены
-        :raises UnauthorizedError: неавторизирован
-        :raises ServerError: ошибка сервера
+        :param token: Заголовок с токеном пользователя
+        :type token: str
         """
-        url = f'{self.host}:{self.port}/check_token'
-        headers = {Key.authorization: authorization}
+        url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/check_token'
+        headers = {str(Key.authorization): token}
         resp = await self.client.post(
             url=url,
             headers=headers,
         )
-        if resp.status_code == status.HTTP_404_NOT_FOUND:
-            logger.info(f'{url} токен не найден')
-            raise errors.NotFoundError()
-        elif resp.status_code == status.HTTP_401_UNAUTHORIZED:
-            logger.info(f'{url} токен не валиден')
-            raise errors.UnauthorizedError()
-        elif resp.status_code == status.HTTP_200_OK:
-            logger.debug(f'{url}токен валиден')
-        else:
-            logger.error(f'{url} ошибка сервера')
-            raise errors.ServerError()
+        errors.handle_status_code(resp.status_code)
+
+    async def is_ready(self) -> None:
+        """Проверяет готовность сервиса к работе."""
+        url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/healthz/ready'  # noqa: E501 can't make shorter
+        resp = await self.client.get(url=url)
+        errors.handle_healthz_status_code(resp.status_code)
+        logger.info('authentication service is ready')
 
 
 class TransactionServiceClient:
@@ -177,19 +179,17 @@ class TransactionServiceClient:
         :type report_request: ReportRequest
         :return: Отчет о транзакциях
         :rtype: Report
-        :raises ServerError: Ошибка доступа
         """
-        url = f'{self.host}:{self.port}/create_report'
+        url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/create_report'
         resp = await self.client.post(
             url=url,
-            json=report_request.model_dump_json(),
+            json=report_request.model_dump(),
         )
-        if resp.status_code == status.HTTP_200_OK:
-            payload: dict[str, str | int] = resp.json()
-            return self._make_report(payload, report_request)
-
-        logger.error(f'{url} ошибка сервера')
-        raise errors.ServerError()
+        errors.handle_status_code(resp.status_code)
+        payload: dict[str, str | int] = resp.json()
+        report = self._make_report(payload, report_request)
+        logger.debug(f'Отчет получен: {report}')
+        return report
 
     async def create_transaction(
         self, transaction: Transaction,
@@ -201,26 +201,28 @@ class TransactionServiceClient:
         :type transaction: Transaction
         :return: Сообщение о успехе
         :rtype: dict[str, str]
-        :raises ServerError: При плохом ответе от сервиса
         """
-        url = f'{self.host}:{self.port}/create_transaction'
+        url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/create_transaction'  # noqa: E501 can't make shorter
         resp = await self.client.post(
             url=url,
-            json=transaction.model_dump_json(),
+            json=transaction.model_dump(),
         )
-        if resp.status_code == status.HTTP_201_CREATED:
-            logger.debug(f'транзакция создана: {transaction}')
-            return good_response
-        logger.error(f'{url} ошибка при создании транзации')
-        raise errors.ServerError()
+        errors.handle_status_code(resp.status_code)
+        logger.info(f'транзакция создана: {transaction}')
+        return good_response
+
+    async def is_ready(self) -> None:
+        """Проверяет готовность сервиса к работе."""
+        url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/healthz/ready'  # noqa: E501 can't make shorter
+        resp = await self.client.get(url=url)
+        errors.handle_healthz_status_code(resp.status_code)
+        logger.info('transaction service is ready')
 
     def _make_report(self, payload, request) -> Report:
         trasactions = self._make_transactions(payload.get(Key.transactions))
-        report = Report(
+        return Report(
             request=request, transactions=trasactions,
         )
-        logger.debug(f'Отчет получен: {report}')
-        return report
 
     def _make_transactions(
         self, transactions: list[dict] | None,  # type: ignore

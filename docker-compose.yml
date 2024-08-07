@@ -1,0 +1,124 @@
+name: shift-project-kuzora
+services:
+  face-verification-service:
+    build: ./face-verification-service
+    restart: unless-stopped
+    environment:
+      CONFIG_PATH: ./src/config/config-local.yml
+    depends_on:
+      - db
+      - kafka
+      - zookeeper
+    ports:
+      - "8081:8000"
+    networks:
+      - app-network
+    volumes:
+      - file-storage:/var/www/face_verification/static/vectors
+  transaction-service:
+    build: ./transaction-service
+    restart: unless-stopped
+    environment:
+      CONFIG_PATH: ./src/config/config-local.yml
+    depends_on:
+      - db
+      - cache
+    ports:
+      - "8082:8000"
+    networks:
+      - app-network
+  auth-service:
+    build: ./auth-service
+    restart: unless-stopped
+    environment:
+      CONFIG_PATH: ./src/config/config-local.yml
+      SECRETS_PATH: /run/secrets/jwt_secret
+    depends_on:
+      - db
+      - cache
+      - kafka
+      - zookeeper
+    ports:
+      - "8083:8000"
+    networks:
+      - app-network
+    secrets:
+      - jwt_secret
+  api-gateway-service:
+    build: .
+    restart: unless-stopped
+    environment:
+      CONFIG_PATH: ./src/config/config-local.yml
+    depends_on:
+      - auth-service
+      - face-verification-service
+      - transaction-service
+    ports:
+      - "8084:8000"
+    networks:
+      - app-network
+    volumes:
+      - file-storage:/var/www/api_gateway_serivce/static/vectors
+  db:
+    image: postgres:16.3
+    restart: unless-stopped
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=persistent
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - persistent-storage:/var/lib/postgresql/data
+    networks:
+      - app-network
+  cache:
+    image: redis:7.4.0
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - cache-storage:/root/redis
+    environment:
+      - REDIS_PASSWORD=my-password
+      - REDIS_PORT=6379
+      - REDIS_DATABASES=16
+    networks:
+      - app-network
+  kafka:
+    image: bitnami/kafka:3.4.1
+    restart: unless-stopped
+    ports:
+      - 9092:9092
+      - 9093:9093
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://127.0.0.1:9092
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=CLIENT://:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka:9092
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=CLIENT
+    depends_on:
+      - zookeeper
+    networks:
+      - app-network
+  zookeeper:
+    image: bitnami/zookeeper:3.9.2
+    restart: unless-stopped
+    ports:
+      - 2181:2181
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    networks:
+      - app-network
+volumes:
+  persistent-storage:
+  cache-storage:
+  file-storage:
+networks:
+  app-network:
+secrets:
+  jwt_secret:
+    file: ./src/config/secrets
