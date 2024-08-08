@@ -62,7 +62,7 @@ class Transaction(BaseModel):
     amount: int = Field(title='Размер транзакции', gt=0)
     transaction_type: TransactionType = Field(title='Тип транзакции')
     timestamp: datetime = Field(
-        title='Дата совершения транзакции', le=datetime.now(),
+        title='Дата совершения транзакции',
     )
 
 
@@ -78,7 +78,6 @@ class ReportRequest(BaseModel):
     )
     end_date: datetime = Field(
         title='Дата конца периода',
-        le=datetime.now(),
     )
 
     @model_validator(mode='after')
