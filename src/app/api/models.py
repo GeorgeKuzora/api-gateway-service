@@ -3,7 +3,7 @@ from datetime import datetime
 from enum import IntEnum
 from typing import Self
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, model_validator, field_serializer
 
 ValidationRules = namedtuple(
     'ValidationRules',
@@ -65,6 +65,11 @@ class Transaction(BaseModel):
         title='Дата совершения транзакции',
     )
 
+    @field_serializer('timestamp', when_used='always')
+    def serialize_timestamp_to_iso_format(self, timestamp: datetime):
+        """Сериализирует поле timestamp в isoformat."""
+        return timestamp.isoformat()
+
 
 class ReportRequest(BaseModel):
     """Запрос на получения отчета."""
@@ -86,6 +91,11 @@ class ReportRequest(BaseModel):
         if self.start_date > self.end_date:
             raise ValueError('дата начала периода больше даты конца периода')
         return self
+
+    @field_serializer('start_date', 'end_date', when_used='always')
+    def serialize_datetime_to_iso_format(self, timestamp: datetime):
+        """Сериализирует поля start_date, end_date в isoformat."""
+        return timestamp.isoformat()
 
 
 class Report(BaseModel):
