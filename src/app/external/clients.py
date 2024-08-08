@@ -119,8 +119,8 @@ class AuthServiceClient:
         :type user_creds: UserCredentials
         :param upload_file: Изображение пользователя
         :type upload_file: UploadFile
-        :return: Токен пользователя
-        :rtype: Token
+        :return: Сообщение
+        :rtype: dict[str, str]
         """
         url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/verify'
         files = {'image': upload_file.file}
@@ -130,7 +130,7 @@ class AuthServiceClient:
             data=user_creds.model_dump(),
         )
         errors.handle_status_code(resp.status_code)
-        logger.info(f'successful verification for {user_creds.username}')
+        logger.info(f'verification for {user_creds.username}')
         return good_response
 
     async def check_token(
