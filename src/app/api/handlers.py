@@ -23,7 +23,9 @@ def register(
     return token
 
 
-@routes.auth.post('/verify')
+@routes.auth.post(
+    '/verify', dependencies=[Depends(clients.auth_client.check_token)],
+)
 def verify(
     message: Annotated[dict[str, str], Depends(clients.auth_client.verify)],
 ) -> dict[str, str]:
