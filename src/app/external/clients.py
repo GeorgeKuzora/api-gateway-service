@@ -5,7 +5,7 @@ from enum import StrEnum
 from typing import Annotated, Any
 
 import httpx
-from fastapi import Depends, UploadFile
+from fastapi import Depends, Form, UploadFile
 from fastapi.security import APIKeyHeader
 
 from app.api.models import (
@@ -14,6 +14,7 @@ from app.api.models import (
     Token,
     Transaction,
     UserCredentials,
+    validation_rules,
 )
 from app.system import errors
 from config.config import get_settings
@@ -109,14 +110,14 @@ class AuthServiceClient:
 
     async def verify(
         self,
-        user_creds: UserCredentials,
+        username: Annotated[str, Form(max_length=validation_rules.username_max_len)],  # noqa: E501 can't shorten hint
         upload_file: UploadFile,
     ) -> dict[str, str]:
         """
         Метод аутентификации пользователя.
 
-        :param user_creds: Данные авторизации пользователя.
-        :type user_creds: UserCredentials
+        :param username: Имя пользователя.
+        :type username: str
         :param upload_file: Изображение пользователя
         :type upload_file: UploadFile
         :return: Сообщение
@@ -127,10 +128,10 @@ class AuthServiceClient:
         resp = await self.client.post(
             url,
             files=files,
-            data=user_creds.model_dump(),
+            data={'username': username},
         )
         errors.handle_status_code(resp.status_code)
-        logger.info(f'verification for {user_creds.username}')
+        logger.info(f'verification for {username}')
         return good_response
 
     async def check_token(
