@@ -4,7 +4,8 @@ services:
     build: ./face-verification-service
     restart: unless-stopped
     environment:
-      CONFIG_PATH: ./src/config/config-local.yml
+      CONFIG_PATH: ./src/config/config-compose.yml
+      SECRETS_PATH: /run/secrets/jwt_secret
     depends_on:
       - db
       - kafka
@@ -19,7 +20,8 @@ services:
     build: ./transaction-service
     restart: unless-stopped
     environment:
-      CONFIG_PATH: ./src/config/config-local.yml
+      CONFIG_PATH: ./src/config/config-compose.yml
+      SECRETS_PATH: /run/secrets/jwt_secret
     depends_on:
       - db
       - cache
@@ -31,7 +33,7 @@ services:
     build: ./auth-service
     restart: unless-stopped
     environment:
-      CONFIG_PATH: ./src/config/config-local.yml
+      CONFIG_PATH: ./src/config/config-compose.yml
       SECRETS_PATH: /run/secrets/jwt_secret
     depends_on:
       - db
@@ -50,7 +52,7 @@ services:
     build: .
     restart: unless-stopped
     environment:
-      CONFIG_PATH: ./src/config/config-local.yml
+      CONFIG_PATH: ./src/config/config-compose.yml
     depends_on:
       - auth-service
       - face-verification-service
