@@ -3,7 +3,7 @@ from datetime import datetime
 from enum import IntEnum
 from typing import Self
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_serializer, model_validator
 
 ValidationRules = namedtuple(
     'ValidationRules',
@@ -30,7 +30,7 @@ class UserCredentials(BaseModel):
     )
     password: str = Field(
         title='Пароль пользователя',
-        max_length=validation_rules.username_max_len,
+        max_length=validation_rules.password_max_len,
         min_length=validation_rules.password_min_len,
     )
 
@@ -62,8 +62,13 @@ class Transaction(BaseModel):
     amount: int = Field(title='Размер транзакции', gt=0)
     transaction_type: TransactionType = Field(title='Тип транзакции')
     timestamp: datetime = Field(
-        title='Дата совершения транзакции', le=datetime.now(),
+        title='Дата совершения транзакции',
     )
+
+    @field_serializer('timestamp', when_used='always')
+    def serialize_timestamp_to_iso_format(self, timestamp: datetime):
+        """Сериализирует поле timestamp в isoformat."""
+        return timestamp.isoformat()
 
 
 class ReportRequest(BaseModel):
@@ -78,7 +83,6 @@ class ReportRequest(BaseModel):
     )
     end_date: datetime = Field(
         title='Дата конца периода',
-        le=datetime.now(),
     )
 
     @model_validator(mode='after')
@@ -87,6 +91,11 @@ class ReportRequest(BaseModel):
         if self.start_date > self.end_date:
             raise ValueError('дата начала периода больше даты конца периода')
         return self
+
+    @field_serializer('start_date', 'end_date', when_used='always')
+    def serialize_datetime_to_iso_format(self, timestamp: datetime):
+        """Сериализирует поля start_date, end_date в isoformat."""
+        return timestamp.isoformat()
 
 
 class Report(BaseModel):

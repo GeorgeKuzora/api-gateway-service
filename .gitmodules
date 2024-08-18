@@ -1,12 +1,12 @@
 [submodule "auth-service"]
 	path = auth-service
 	url = git@hub.mos.ru:shift-python/y2024/homeworks/gkuzora/w1hw1-auth-service.git
-	branch = feature/w5hw1-networking
+	branch = feature/w6hw2-sqlalchemy
 [submodule "transaction-service"]
 	path = transaction-service
 	url = git@hub.mos.ru:shift-python/y2024/homeworks/gkuzora/w1hw1-transaction-service.git
-	branch = feature/w5hw1-networking
+	branch = feature/w6hw2-sqlalchemy
 [submodule "face-verification-service"]
 	path = face-verification-service
 	url = git@hub.mos.ru:shift-python/y2024/homeworks/gkuzora/w1hw1-face-verification-service.git
-	branch = feature/w5hw1-networking
+	branch = feature/w6hw2-sqlalchemy
