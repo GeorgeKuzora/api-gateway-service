@@ -1,0 +1,7 @@
+localhost: "127.0.0.1"
+authentification:
+  host: "kuzora-auth-service"
+  port: "8080"
+transactions:
+  host: "kuzora-transaction-service"
+  port: "8080"
