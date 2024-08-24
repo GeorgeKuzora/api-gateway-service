@@ -11,7 +11,7 @@ services:
       - kafka
       - zookeeper
     ports:
-      - "8081:8000"
+      - "8081:8080"
     networks:
       - app-network
     volumes:
@@ -26,7 +26,7 @@ services:
       - db
       - cache
     ports:
-      - "8082:8000"
+      - "8082:8080"
     networks:
       - app-network
   auth-service:
@@ -41,7 +41,7 @@ services:
       - kafka
       - zookeeper
     ports:
-      - "8083:8000"
+      - "8083:8080"
     networks:
       - app-network
     secrets:
@@ -58,7 +58,7 @@ services:
       - face-verification-service
       - transaction-service
     ports:
-      - "8084:8000"
+      - "8084:8080"
     networks:
       - app-network
   db:
