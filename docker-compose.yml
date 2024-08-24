@@ -15,7 +15,7 @@ services:
     networks:
       - app-network
     volumes:
-      - file-storage:/var/www/face_verification/vectors
+      - file-storage:/var/www/face_verification/kuzora/vectors
   transaction-service:
     build: ./transaction-service
     restart: unless-stopped
@@ -47,7 +47,7 @@ services:
     secrets:
       - jwt_secret
     volumes:
-      - file-storage:/var/www/face_verification/vectors
+      - file-storage:/var/www/face_verification/kuzora/vectors
   api-gateway-service:
     build: .
     restart: unless-stopped
