@@ -1,0 +1,58 @@
+replicaCount: 1
+
+image:
+  repository: gkuzora/api-gateway-service
+  tag: latest
+
+selectorLabels:
+  app: kuzora-api-gateway
+
+configMap:
+  data:
+    config_path: /app/src/config/config-kube.yml
+    pythonpath: /app/src
+
+service:
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+
+autoscaling:
+  enabled: false
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+environment:
+  - name: CONFIG_PATH
+    valueFrom:
+      configMapKeyRef:
+        name: kuzora-api-gateway-configmap
+        key: config_path
+  - name: PYTHONPATH
+    valueFrom:
+      configMapKeyRef:
+        name: kuzora-api-gateway-configmap
+        key: pythonpath
+
+livenessProbe:
+  failureThreshold: 10
+  httpGet:
+    path: /healthz/up
+    port: 8080
+  initialDelaySeconds: 3
+  periodSeconds: 2
+readinessProbe:
+  failureThreshold: 5
+  httpGet:
+    path: /healthz/ready
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 2
+  successThreshold: 2
+
