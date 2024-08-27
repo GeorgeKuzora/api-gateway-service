@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kuzora-api-gateway-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kuzora-api-gateway
+  template:
+    metadata:
+      labels:
+        app: kuzora-api-gateway
+    spec:
+      containers:
+        - name: kuzora-api-gateway
+          image: gkuzora/api-gateway-service:latest
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /healthz/ready
+              port: 8080
+            failureThreshold: 5
+            initialDelaySeconds: 30
+            periodSeconds: 2
+            successThreshold: 2
+          livenessProbe:
+            httpGet:
+              path: /healthz/up
+              port: 8080
+            failureThreshold: 10
+            initialDelaySeconds: 3
+            periodSeconds: 2
+          resources:
+            limits:
+              cpu: 100m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          env:
+            - name: CONFIG_PATH
+              valueFrom:
+                configMapKeyRef:
+                  name: kuzora-api-gateway-configmap
+                  key: config_path
+            - name: PYTHONPATH
+              valueFrom:
+                configMapKeyRef:
+                  name: kuzora-api-gateway-configmap
+                  key: pythonpath

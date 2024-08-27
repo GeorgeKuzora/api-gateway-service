@@ -8,6 +8,10 @@ README.md
 .editorconfig
 .mypy_cache
 setup.cfg
+db/
+
+# k8s
+manifests
 
 # Git
 .git
@@ -100,4 +104,3 @@ venv/
 
 # VS Code
 .vscode/
-

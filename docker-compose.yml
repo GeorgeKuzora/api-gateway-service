@@ -4,36 +4,40 @@ services:
     build: ./face-verification-service
     restart: unless-stopped
     environment:
-      CONFIG_PATH: ./src/config/config-compose.yml
+      ALEMBIC_CONFIG: /app/alembic_compose.ini
+      CONFIG_PATH: /app/src/config/config-compose.yml
       SECRETS_PATH: /run/secrets/jwt_secret
     depends_on:
       - db
       - kafka
       - zookeeper
     ports:
-      - "8081:8000"
+      - "8081:8080"
     networks:
       - app-network
     volumes:
-      - file-storage:/var/www/face_verification/vectors
+      - file-storage:/var/www/face_verification/kuzora/vectors
   transaction-service:
     build: ./transaction-service
     restart: unless-stopped
     environment:
-      CONFIG_PATH: ./src/config/config-compose.yml
+      ALEMBIC_CONFIG: /app/alembic_compose.ini
+      CONFIG_PATH: /app/src/config/config-compose.yml
       SECRETS_PATH: /run/secrets/jwt_secret
     depends_on:
       - db
       - cache
     ports:
-      - "8082:8000"
+      - "8082:8080"
     networks:
       - app-network
   auth-service:
-    build: ./auth-service
+    # build: ./auth-service
+    image: gkuzora/auth-service:latest
     restart: unless-stopped
     environment:
-      CONFIG_PATH: ./src/config/config-compose.yml
+      ALEMBIC_CONFIG: /app/alembic_compose.ini
+      CONFIG_PATH: /app/src/config/config-compose.yml
       SECRETS_PATH: /run/secrets/jwt_secret
     depends_on:
       - db
@@ -41,24 +45,24 @@ services:
       - kafka
       - zookeeper
     ports:
-      - "8083:8000"
+      - "8083:8080"
     networks:
       - app-network
     secrets:
       - jwt_secret
     volumes:
-      - file-storage:/var/www/face_verification/vectors
+      - file-storage:/var/www/face_verification/kuzora/vectors
   api-gateway-service:
     build: .
     restart: unless-stopped
     environment:
-      CONFIG_PATH: ./src/config/config-compose.yml
+      CONFIG_PATH: /app/src/config/config-compose.yml
     depends_on:
       - auth-service
       - face-verification-service
       - transaction-service
     ports:
-      - "8084:8000"
+      - "8084:8080"
     networks:
       - app-network
   db:
