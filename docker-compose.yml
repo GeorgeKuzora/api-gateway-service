@@ -32,8 +32,7 @@ services:
     networks:
       - app-network
   auth-service:
-    # build: ./auth-service
-    image: gkuzora/auth-service:latest
+    build: ./auth-service
     restart: unless-stopped
     environment:
       ALEMBIC_CONFIG: /app/alembic_compose.ini
