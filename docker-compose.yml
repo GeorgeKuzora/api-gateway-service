@@ -126,10 +126,15 @@ services:
       - type: bind
         source: ./configs/prometheus/config.yml
         target: /prometheus/config.yml
+      - type: volume
+        source: prometheus_data
+        target: /prometheus
+    command: ["--config.file=/prometheus/config.yml", "--storage.tsdb.path=/prometheus", "--web.console.libraries=/usr/share/prometheus/console_libraries", "--web.console.templates=/usr/share/prometheus/consoles"]
 volumes:
   persistent-storage:
   cache-storage:
   file-storage:
+  prometheus_data:
 networks:
   app-network:
 secrets:
