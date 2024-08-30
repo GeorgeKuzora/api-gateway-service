@@ -122,6 +122,10 @@ services:
       - 9090:9090
     networks:
       - app-network
+    volumes:
+      - type: bind
+        source: ./configs/prometheus/config.yml
+        target: /prometheus/config.yml
 volumes:
   persistent-storage:
   cache-storage:
