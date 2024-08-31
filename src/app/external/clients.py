@@ -226,14 +226,20 @@ class TransactionServiceClient:
         :return: Сообщение о успехе
         :rtype: dict[str, str]
         """
-        url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/create_transaction'  # noqa: E501 can't make shorter
-        resp = await self.client.post(
-            url=url,
-            json=transaction.model_dump(),
-        )
-        errors.handle_status_code(resp.status_code)
-        logger.info(f'транзакция создана: {transaction}')
-        return good_response
+        with global_tracer().start_active_span('create_transaction') as scope:
+            scope.span.set_tag(
+                'transaction_data',
+                transaction.model_dump().get('username', ''),
+            )
+            url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/create_transaction'  # noqa: E501 can't make shorter
+            resp = await self.client.post(
+                url=url,
+                json=transaction.model_dump(),
+            )
+            scope.span.set_tag('response_status', resp.status_code)
+            errors.handle_status_code(resp.status_code)
+            logger.info(f'транзакция создана: {transaction}')
+            return good_response
 
     async def is_ready(self) -> None:
         """Проверяет готовность сервиса к работе."""
