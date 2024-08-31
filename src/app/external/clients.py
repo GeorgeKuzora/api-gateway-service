@@ -7,6 +7,7 @@ from typing import Annotated, Any
 import httpx
 from fastapi import Depends, Form, UploadFile
 from fastapi.security import APIKeyHeader
+from opentracing import global_tracer
 
 from app.api.models import (
     Report,
@@ -74,12 +75,15 @@ class AuthServiceClient:
         :rtype: Token
         """
         url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/register'
-        resp = await self.client.post(
-            url, json=user_creds.model_dump(),
-        )
-        errors.handle_status_code(resp.status_code)
-        logger.info(f'successful register for {user_creds.username}')
-        return Token(token=resp.json().get(Key.encoded_token, ''))
+        with global_tracer().start_active_span('register') as scope:
+            scope.span.set_tag('register_data', user_creds.model_dump_json())
+            resp = await self.client.post(
+                url, json=user_creds.model_dump(),
+            )
+            scope.span.set_tag('response_status', resp.status_code)
+            errors.handle_status_code(resp.status_code)
+            logger.info(f'successful register for {user_creds.username}')
+            return Token(token=resp.json().get(Key.encoded_token, ''))
 
     async def authenticate(
         self,
