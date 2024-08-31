@@ -1,4 +1,5 @@
 from fastapi import Request
+from jaeger_client.config import Config, Tracer
 from opentracing import (
     InvalidCarrierException,
     SpanContextCorruptedException,
@@ -6,6 +7,31 @@ from opentracing import (
     propagation,
     tags,
 )
+
+from config.config import get_settings
+
+
+def get_tracer() -> Tracer | None:
+    """Создает трейсер."""
+    settings = get_settings().tracing
+    if not settings.enabled:
+        return None
+    config = Config(
+        config={
+            'sampler': {
+                'type': settings.sampler_type,
+                'param': settings.sampler_param,
+            },
+            'local_agent': {
+                'reporting_host': settings.agent_host,
+                'reporting_port': settings.agent_port,
+            },
+            'logging': settings.logging,
+        },
+        service_name=settings.service_name,
+        validate=settings.validate,
+    )
+    return config.initialize_tracer()
 
 
 def is_business_route(path: str) -> bool:
