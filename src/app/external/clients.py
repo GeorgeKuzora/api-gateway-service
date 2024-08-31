@@ -161,13 +161,15 @@ class AuthServiceClient:
         :param token: Заголовок с токеном пользователя
         :type token: str
         """
-        url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/check_token'
-        headers = {str(Key.authorization): token}
-        resp = await self.client.post(
-            url=url,
-            headers=headers,
-        )
-        errors.handle_status_code(resp.status_code)
+        with global_tracer().start_active_span('check_token') as scope:
+            url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/check_token'  # noqa: E501
+            headers = {str(Key.authorization): token}
+            resp = await self.client.post(
+                url=url,
+                headers=headers,
+            )
+            scope.span.set_tag('response_status', resp.status_code)
+            errors.handle_status_code(resp.status_code)
 
     async def is_ready(self) -> None:
         """Проверяет готовность сервиса к работе."""
