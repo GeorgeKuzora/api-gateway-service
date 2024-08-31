@@ -135,7 +135,7 @@ class AuthServiceClient:
         :return: Сообщение
         :rtype: dict[str, str]
         """
-        with global_tracer().start_active_span('login') as scope:
+        with global_tracer().start_active_span('verify') as scope:
             scope.span.set_tag(
                 'verification_data',
                 username,
