@@ -1,5 +1,6 @@
 from fastapi import Request
-from jaeger_client.config import Config, Tracer
+from jaeger_client.config import Config
+from jaeger_client.tracer import Tracer
 from opentracing import (
     InvalidCarrierException,
     SpanContextCorruptedException,
