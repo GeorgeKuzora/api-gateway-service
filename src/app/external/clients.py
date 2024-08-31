@@ -201,16 +201,19 @@ class TransactionServiceClient:
         :return: Отчет о транзакциях
         :rtype: Report
         """
-        url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/create_report'
-        resp = await self.client.post(
-            url=url,
-            json=report_request.model_dump(),
-        )
-        errors.handle_status_code(resp.status_code)
-        payload: dict[str, str | int] = resp.json()
-        report = self._make_report(payload, report_request)
-        logger.debug(f'Отчет получен: {report}')
-        return report
+        with global_tracer().start_active_span('get_report') as scope:
+            scope.span.set_tag('report_data', report_request.model_dump_json())
+            url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/create_report'  # noqa: E501
+            resp = await self.client.post(
+                url=url,
+                json=report_request.model_dump(),
+            )
+            scope.span.set_tag('response_status', resp.status_code)
+            errors.handle_status_code(resp.status_code)
+            payload: dict[str, str | int] = resp.json()
+            report = self._make_report(payload, report_request)
+            logger.debug(f'Отчет получен: {report}')
+            return report
 
     async def create_transaction(
         self, transaction: Transaction,
