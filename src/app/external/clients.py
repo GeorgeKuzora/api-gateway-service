@@ -135,16 +135,22 @@ class AuthServiceClient:
         :return: Сообщение
         :rtype: dict[str, str]
         """
-        url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/verify'
-        files = {'image': upload_file.file}
-        resp = await self.client.post(
-            url,
-            files=files,
-            data={'username': username},
-        )
-        errors.handle_status_code(resp.status_code)
-        logger.info(f'verification for {username}')
-        return good_response
+        with global_tracer().start_active_span('login') as scope:
+            scope.span.set_tag(
+                'verification_data',
+                username,
+            )
+            url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/verify'
+            files = {'image': upload_file.file}
+            resp = await self.client.post(
+                url,
+                files=files,
+                data={'username': username},
+            )
+            scope.span.set_tag('response_status', resp.status_code)
+            errors.handle_status_code(resp.status_code)
+            logger.info(f'verification for {username}')
+            return good_response
 
     async def check_token(
         self, token: Annotated[str, Depends(header_scheme)],
