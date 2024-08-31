@@ -76,7 +76,9 @@ class AuthServiceClient:
         """
         url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/register'
         with global_tracer().start_active_span('register') as scope:
-            scope.span.set_tag('register_data', user_creds.model_dump_json())
+            scope.span.set_tag(
+                'register_data', user_creds.model_dump().get('username', ''),
+            )
             resp = await self.client.post(
                 url, json=user_creds.model_dump(),
             )
@@ -100,17 +102,23 @@ class AuthServiceClient:
         :return: Токен пользователя
         :rtype: Token
         """
-        url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/login'
-        headers = {str(Key.authorization): token}
-        resp = await self.client.post(
-            url,
-            json=user_creds.model_dump(),
-            headers=headers,
-        )
-        errors.handle_status_code(resp.status_code)
-        logger.info(f'successful login for {user_creds.username}')
-        payload = resp.json()
-        return Token(token=payload.get(Key.encoded_token))
+        with global_tracer().start_active_span('login') as scope:
+            scope.span.set_tag(
+                'authenticatation_data',
+                user_creds.model_dump().get('username', ''),
+            )
+            url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/login'
+            headers = {str(Key.authorization): token}
+            resp = await self.client.post(
+                url,
+                json=user_creds.model_dump(),
+                headers=headers,
+            )
+            scope.span.set_tag('response_status', resp.status_code)
+            errors.handle_status_code(resp.status_code)
+            logger.info(f'successful login for {user_creds.username}')
+            payload = resp.json()
+            return Token(token=payload.get(Key.encoded_token))
 
     async def verify(
         self,
