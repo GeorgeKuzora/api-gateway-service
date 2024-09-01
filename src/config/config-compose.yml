@@ -5,3 +5,12 @@ authentification:
 transactions:
   host: "transaction-service"
   port: "8080"
+tracing:
+  enabled: True
+  sampler_type: "const"
+  sampler_param: 1
+  agent_host: "jaeger"
+  agent_port: 6831
+  service_name: "api-gateway-service"
+  logging: true
+  validate: true

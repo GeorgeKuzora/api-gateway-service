@@ -32,8 +32,7 @@ services:
     networks:
       - app-network
   auth-service:
-    # build: ./auth-service
-    image: gkuzora/auth-service:latest
+    build: ./auth-service
     restart: unless-stopped
     environment:
       ALEMBIC_CONFIG: /app/alembic_compose.ini
@@ -116,10 +115,53 @@ services:
       - ALLOW_ANONYMOUS_LOGIN=yes
     networks:
       - app-network
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    restart: unless-stopped
+    ports:
+      - 9090:9090
+    networks:
+      - app-network
+    volumes:
+      - type: bind
+        source: ./configs/prometheus/config.yml
+        target: /prometheus/config.yml
+      - type: volume
+        source: prometheus_data
+        target: /prometheus
+    command: ["--config.file=/prometheus/config.yml", "--storage.tsdb.path=/prometheus", "--web.console.libraries=/usr/share/prometheus/console_libraries", "--web.console.templates=/usr/share/prometheus/consoles"]
+  grafana:
+    image: grafana/grafana:11.2.0-ubuntu
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+    networks:
+      - app-network
+    volumes:
+      - type: volume
+        source: grafana-storage
+        target: /var/lib/grafana
+  jaeger:
+    image: jaegertracing/all-in-one:1.60
+    restart: unless-stopped
+    environment:
+      - COLLECTOR_ZIPKIN_HTTP_PORT=9411
+    ports:
+      - 5775:5775/udp
+      - 6831:6831/udp
+      - 6832:6832/udp
+      - 5778:5778
+      - 16686:16686
+      - 14268:14268
+      - 9411:9411
+    networks:
+      - app-network
 volumes:
   persistent-storage:
   cache-storage:
   file-storage:
+  prometheus_data:
+  grafana-storage:
 networks:
   app-network:
 secrets:

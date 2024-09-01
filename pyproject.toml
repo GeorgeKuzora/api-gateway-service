@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "workspace"
-version = "0.9.0"
+version = "0.12.0"
 description = ""
 authors = ["Georgiy Kuzora <georgiy@kuzora.ru>"]
 readme = "README.md"
@@ -12,6 +12,8 @@ aiodns = "3.2.0"
 aiohttp = "3.9.5"
 pydantic-settings = "2.3.4"
 pyyaml = "6.0.1"
+opentracing = "2.4.0"
+jaeger-client = "4.8.0"
 
 [tool.poetry.group.dev.dependencies]
 wemake-python-styleguide = "^0.19.2"
