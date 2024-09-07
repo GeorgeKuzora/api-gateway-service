@@ -35,7 +35,7 @@ def verify(
 
 @routes.transaction.post('/transaction', status_code=status.HTTP_201_CREATED)
 def create_transaction(
-    message: Annotated[dict[str, str], Depends(clients.transactions_client.create_transaction)],  # noqa: E501 anotation
+    message: Annotated[dict[str, str], Depends(clients.transactions_client.create_transaction)],  # noqa: E501 annotation
 ) -> dict[str, str]:
     """Регистрирует пользователя."""
     return message

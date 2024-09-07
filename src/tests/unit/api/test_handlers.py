@@ -431,7 +431,7 @@ class TestCreateTransaction:
     """Тестирует хэндлер transaction/transaction."""
 
     valid_transaction = {
-        str(Key.username): 'charly',
+        str(Key.username): 'charley',
         str(Key.amount): 1,
         str(Key.transaction_type): 0,
         str(Key.timestamp): transaction_date,

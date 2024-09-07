@@ -63,8 +63,8 @@ class Settings(BaseSettings):
     def _create_instance(cls, settings) -> Self:
         conf = {
             'localhost': settings.get('localhost'),
-            'auth_host': settings.get('authentification').get('host'),
-            'auth_port': settings.get('authentification').get('port'),
+            'auth_host': settings.get('authentication').get('host'),
+            'auth_port': settings.get('authentication').get('port'),
             'transactions_host': settings.get('transactions').get('host'),
             'transactions_port': settings.get('transactions').get('port'),
             'tracing': settings.get('tracing'),
