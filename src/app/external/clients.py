@@ -59,7 +59,12 @@ class AuthServiceClient:
     """Клиент для доступа к сервису аутентификации."""
 
     def __init__(self, client: Client) -> None:
-        """Метод инициализации."""
+        """
+        Метод инициализации.
+
+        :param client: Клиент для создания запросов.
+        :type client: AsyncClient
+        """
         settings = get_settings()
         self.host = settings.auth_host
         self.port = settings.auth_port
@@ -126,7 +131,7 @@ class AuthServiceClient:
         upload_file: UploadFile,
     ) -> dict[str, str]:
         """
-        Метод аутентификации пользователя.
+        Метод верификации пользователя.
 
         :param username: Имя пользователя.
         :type username: str

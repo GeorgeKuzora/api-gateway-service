@@ -38,8 +38,16 @@ class Settings(BaseSettings):
     tracing: TracingSettings
 
     @classmethod
-    def from_yaml(cls, file_path) -> Self:
-        """Создает объект класса из файла yaml."""
+    def from_yaml(cls, file_path: str) -> Self:
+        """
+        Создает объект класса из файла yaml.
+
+        :param file_path: Путь к файлу конфигурации.
+        :type file_path: str
+        :return: Объект с конфигурацией приложения.
+        :rtype: Settings
+        :raises ConfigError: В случае если путь к файлу не верен.
+        """
         if not cls._is_valid_path(file_path):
             logger.critical(
                 f'config file  not found: {file_path}',

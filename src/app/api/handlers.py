@@ -11,7 +11,17 @@ from app.external.clients import clients
 def authenticate(
     token: Annotated[Token, Depends(clients.auth_client.authenticate)],
 ) -> Token:
-    """Аутентифицирует пользователя."""
+    """
+    Аутентифицирует пользователя.
+
+    Валидирует данные пользователя,
+    создает и возвращает токен пользователя.
+
+    :param token: Токен получаемый от клиента сервиса auth.
+    :type token: Token
+    :return: Токен пользователя.
+    :rtype: Token
+    """
     return token
 
 
@@ -19,7 +29,17 @@ def authenticate(
 def register(
     token: Annotated[Token, Depends(clients.auth_client.register)],
 ) -> Token:
-    """Регистрирует пользователя."""
+    """
+    Регистрирует пользователя.
+
+    Регистрирует пользователя в системе,
+    создает и возвращает токен пользователя.
+
+    :param token: Токен получаемый от клиента сервиса auth.
+    :type token: Token
+    :return: Токен пользователя.
+    :rtype: Token
+    """
     return token
 
 
@@ -29,7 +49,17 @@ def register(
 def verify(
     message: Annotated[dict[str, str], Depends(clients.auth_client.verify)],
 ) -> dict[str, str]:
-    """Верифицирует пользователя."""
+    """
+    Верифицирует пользователя.
+
+    Валидирует токен пользователя,
+    загружает изображение пользователя.
+
+    :param message: Сообщение о успешности операции.
+    :type message: dict[str, str]
+    :return: Сообщение о успешности операции.
+    :rtype: dict[str, str]
+    """
     return message
 
 
@@ -37,7 +67,14 @@ def verify(
 def create_transaction(
     message: Annotated[dict[str, str], Depends(clients.transactions_client.create_transaction)],  # noqa: E501 annotation
 ) -> dict[str, str]:
-    """Регистрирует пользователя."""
+    """
+    Создает транзакцию.
+
+    :param message: Сообщение о успешности операции.
+    :type message: dict[str, str]
+    :return: Сообщение о успешности операции.
+    :rtype: dict[str, str]
+    """
     return message
 
 
@@ -45,5 +82,14 @@ def create_transaction(
 def create_report(
     report: Annotated[Report, Depends(clients.transactions_client.get_report)],
 ) -> Report:
-    """Регистрирует пользователя."""
+    """
+    Создает отчет о транзакциях.
+
+    Создает и возвращает отчет о транзакциях.
+
+    :param report: Отчет о транзакциях созданный клиентом сервиса транзакций.
+    :type report: Report
+    :return: Отчет о транзакциях.
+    :rtype: Report
+    """
     return report
