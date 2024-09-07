@@ -42,10 +42,10 @@ class Settings(BaseSettings):
         """Создает объект класса из файла yaml."""
         if not cls._is_valid_path(file_path):
             logger.critical(
-                f'config file {file_path} not found',
+                f'config file  not found: {file_path}',
             )
             raise ConfigError(
-                f'config file {file_path} not found',
+                f'config file not found: {file_path}',
             )
         with open(file_path, 'r') as settings_file:
             settings = yaml.safe_load(settings_file)
@@ -53,6 +53,9 @@ class Settings(BaseSettings):
 
     @classmethod
     def _is_valid_path(cls, path: str) -> bool:
+        if not path:
+            logger.error('path was not provided')
+            return False
         passlib_path = Path(path)
         return passlib_path.is_file()
 
@@ -71,7 +74,16 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings():
-    """Создает конфигурацию сервиса."""
+    """
+    Создает конфигурацию сервиса.
+
+    :return: Объект с конфигурацией приложения.
+    :rtype: Settings
+    :raises ConfigError: При ошибке в конфигурации приложения.
+    """
     config_path_env_var = 'CONFIG_PATH'
     config_file = os.getenv(config_path_env_var)
+    if config_file is None:
+        logger.critical(f'env-var not found: {config_path_env_var}')
+        raise ConfigError(f'env-var not found: {config_path_env_var}')
     return Settings.from_yaml(config_file)
