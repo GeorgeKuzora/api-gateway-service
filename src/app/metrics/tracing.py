@@ -1,3 +1,5 @@
+from typing import Any
+
 from fastapi import Request
 from jaeger_client.config import Config
 from jaeger_client.tracer import Tracer
@@ -36,7 +38,14 @@ def get_tracer() -> Tracer | None:
 
 
 def is_business_route(path: str) -> bool:
-    """Проверяет относится ли путь к бизнесс логике."""
+    """
+    Проверяет относится ли путь к бизнес логике.
+
+    :param path: Путь к URI.
+    :type path: str
+    :return: относится ли путь к бизнес логике приложения.
+    :rtype: bool
+    """
     not_business_routes = [
         '/healthz/up',
         '/healthz/ready',
@@ -45,8 +54,17 @@ def is_business_route(path: str) -> bool:
     return not any((path.startswith(route) for route in not_business_routes))
 
 
-async def tracing_middleware(request: Request, call_next):
-    """Создает спан для сервиса."""
+async def tracing_middleware(request: Request, call_next) -> Any:
+    """
+    Создает спан для сервиса.
+
+    :param request: Объект запроса к сервису.
+    :type request: Request
+    :param call_next: Следующая за middleware функция обработчик.
+    :type call_next: Callable
+    :return: Ответ от следующей за middleware функцией обработчиком.
+    :rtype: Response
+    """
     path = request.url.path
     if not is_business_route(path):
         return await call_next(request)

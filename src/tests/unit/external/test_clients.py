@@ -23,7 +23,7 @@ class Keys(StrEnum):
     """Используемые ключи для словарей."""
 
     encoded_token = 'encoded_token'  # noqa: S105 test data
-    authorisation = 'Authorization'
+    authorization = 'Authorization'
     status = 'status'
     json = 'json'
     status_code = 'status_code'
@@ -35,7 +35,7 @@ test_user_creds = UserCredentials(  # noqa: S106 test data
 )
 test_encoded_token = 'test_encoded_token'  # noqa: S105 test data
 test_token_object = {Keys.encoded_token: test_encoded_token}
-test_headers = {Keys.authorisation: f'Bearer {test_encoded_token}'}
+test_headers = {Keys.authorization: f'Bearer {test_encoded_token}'}
 
 
 class TestRegister:
@@ -135,7 +135,7 @@ class TestAuthenticate:
 
         with pytest.raises(HTTPException):
             await auth_client.authenticate(
-                user_creds, headers[Keys.authorisation],
+                user_creds, headers[Keys.authorization],
             )
 
     @pytest.mark.asyncio
@@ -165,7 +165,7 @@ class TestAuthenticate:
         auth_client = AuthServiceClient(client)
 
         response: Token = await auth_client.authenticate(
-            user_creds, headers[Keys.authorisation],
+            user_creds, headers[Keys.authorization],
         )
 
         assert response.token == expected[Keys.json][Keys.encoded_token]
@@ -212,7 +212,7 @@ class TestCheckToken:
         )
         auth_client = AuthServiceClient(client)
 
-        await auth_client.check_token(headers[Keys.authorisation])
+        await auth_client.check_token(headers[Keys.authorization])
 
 
 class TestGetReport:

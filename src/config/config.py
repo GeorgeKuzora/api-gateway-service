@@ -38,14 +38,22 @@ class Settings(BaseSettings):
     tracing: TracingSettings
 
     @classmethod
-    def from_yaml(cls, file_path) -> Self:
-        """Создает объект класса из файла yaml."""
+    def from_yaml(cls, file_path: str) -> Self:
+        """
+        Создает объект класса из файла yaml.
+
+        :param file_path: Путь к файлу конфигурации.
+        :type file_path: str
+        :return: Объект с конфигурацией приложения.
+        :rtype: Settings
+        :raises ConfigError: В случае если путь к файлу не верен.
+        """
         if not cls._is_valid_path(file_path):
             logger.critical(
-                f'config file {file_path} not found',
+                f'config file  not found: {file_path}',
             )
             raise ConfigError(
-                f'config file {file_path} not found',
+                f'config file not found: {file_path}',
             )
         with open(file_path, 'r') as settings_file:
             settings = yaml.safe_load(settings_file)
@@ -53,6 +61,9 @@ class Settings(BaseSettings):
 
     @classmethod
     def _is_valid_path(cls, path: str) -> bool:
+        if not path:
+            logger.error('path was not provided')
+            return False
         passlib_path = Path(path)
         return passlib_path.is_file()
 
@@ -60,8 +71,8 @@ class Settings(BaseSettings):
     def _create_instance(cls, settings) -> Self:
         conf = {
             'localhost': settings.get('localhost'),
-            'auth_host': settings.get('authentification').get('host'),
-            'auth_port': settings.get('authentification').get('port'),
+            'auth_host': settings.get('authentication').get('host'),
+            'auth_port': settings.get('authentication').get('port'),
             'transactions_host': settings.get('transactions').get('host'),
             'transactions_port': settings.get('transactions').get('port'),
             'tracing': settings.get('tracing'),
@@ -71,7 +82,16 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings():
-    """Создает конфигурацию сервиса."""
+    """
+    Создает конфигурацию сервиса.
+
+    :return: Объект с конфигурацией приложения.
+    :rtype: Settings
+    :raises ConfigError: При ошибке в конфигурации приложения.
+    """
     config_path_env_var = 'CONFIG_PATH'
     config_file = os.getenv(config_path_env_var)
+    if config_file is None:
+        logger.critical(f'env-var not found: {config_path_env_var}')
+        raise ConfigError(f'env-var not found: {config_path_env_var}')
     return Settings.from_yaml(config_file)

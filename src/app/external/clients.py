@@ -59,7 +59,12 @@ class AuthServiceClient:
     """Клиент для доступа к сервису аутентификации."""
 
     def __init__(self, client: Client) -> None:
-        """Метод инициализации."""
+        """
+        Метод инициализации.
+
+        :param client: Клиент для создания запросов.
+        :type client: AsyncClient
+        """
         settings = get_settings()
         self.host = settings.auth_host
         self.port = settings.auth_port
@@ -104,7 +109,7 @@ class AuthServiceClient:
         """
         with global_tracer().start_active_span('login') as scope:
             scope.span.set_tag(
-                'authenticatation_data',
+                'authentication_data',
                 user_creds.model_dump().get('username', ''),
             )
             url = f'{Key.http_protocol_prefix}{self.host}:{self.port}/login'
@@ -126,7 +131,7 @@ class AuthServiceClient:
         upload_file: UploadFile,
     ) -> dict[str, str]:
         """
-        Метод аутентификации пользователя.
+        Метод верификации пользователя.
 
         :param username: Имя пользователя.
         :type username: str
@@ -221,7 +226,7 @@ class TransactionServiceClient:
         """
         Создает транзакцию на основании данных пользователя.
 
-        :param transaction: Транзакция совершенная пользовалетем.
+        :param transaction: Транзакция совершенная пользователем.
         :type transaction: Transaction
         :return: Сообщение о успехе
         :rtype: dict[str, str]
@@ -249,16 +254,16 @@ class TransactionServiceClient:
         logger.info('transaction service is ready')
 
     def _make_report(self, payload, request) -> Report:
-        trasactions = self._make_transactions(payload.get(Key.transactions))
+        transactions = self._make_transactions(payload.get(Key.transactions))
         return Report(
-            request=request, transactions=trasactions,
+            request=request, transactions=transactions,
         )
 
     def _make_transactions(
         self, transactions: list[dict] | None,  # type: ignore
     ) -> list[Transaction]:
         if transactions is None:
-            raise ValueError('expected list but recieved None')
+            raise ValueError('expected list but received None')
         result_transactions = []
         for key_value in transactions:
             result_transactions.append(Transaction(**key_value))

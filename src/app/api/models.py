@@ -66,8 +66,15 @@ class Transaction(BaseModel):
     )
 
     @field_serializer('timestamp', when_used='always')
-    def serialize_timestamp_to_iso_format(self, timestamp: datetime):
-        """Сериализирует поле timestamp в isoformat."""
+    def serialize_timestamp_to_iso_format(self, timestamp: datetime) -> str:
+        """
+        Преобразует поле timestamp в isoformat.
+
+        :param timestamp: Значение поля timestamp.
+        :type timestamp: datetime
+        :return: Значение поля timestamp в ISO-формате.
+        :rtype: str
+        """
         return timestamp.isoformat()
 
 
@@ -87,14 +94,26 @@ class ReportRequest(BaseModel):
 
     @model_validator(mode='after')
     def check_dates_match(self) -> Self:
-        """Проверяет что даты соответствуют друг другу."""
+        """
+        Проверяет что даты находятся в правильном порядке.
+
+        :return: Собственный объект.
+        :raises ValueError: Если дата начала периода больше даты конца.
+        """
         if self.start_date > self.end_date:
             raise ValueError('дата начала периода больше даты конца периода')
         return self
 
     @field_serializer('start_date', 'end_date', when_used='always')
     def serialize_datetime_to_iso_format(self, timestamp: datetime):
-        """Сериализирует поля start_date, end_date в isoformat."""
+        """
+        Преобразует поля start_date, end_date в isoformat.
+
+        :param timestamp: Значение поля.
+        :type timestamp: datetime
+        :return: Значение поля в ISO-формате.
+        :rtype: str
+        """
         return timestamp.isoformat()
 
 
