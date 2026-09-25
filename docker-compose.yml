@@ -1,0 +1,169 @@
+name: shift-project-kuzora
+services:
+  face-verification-service:
+    build: ./face-verification-service
+    restart: unless-stopped
+    environment:
+      ALEMBIC_CONFIG: /app/alembic_compose.ini
+      CONFIG_PATH: /app/src/config/config-compose.yml
+      SECRETS_PATH: /run/secrets/jwt_secret
+    depends_on:
+      - db
+      - kafka
+      - zookeeper
+    ports:
+      - "8081:8080"
+    networks:
+      - app-network
+    volumes:
+      - file-storage:/var/www/face_verification/kuzora/vectors
+  transaction-service:
+    build: ./transaction-service
+    restart: unless-stopped
+    environment:
+      ALEMBIC_CONFIG: /app/alembic_compose.ini
+      CONFIG_PATH: /app/src/config/config-compose.yml
+      SECRETS_PATH: /run/secrets/jwt_secret
+    depends_on:
+      - db
+      - cache
+    ports:
+      - "8082:8080"
+    networks:
+      - app-network
+  auth-service:
+    build: ./auth-service
+    restart: unless-stopped
+    environment:
+      ALEMBIC_CONFIG: /app/alembic_compose.ini
+      CONFIG_PATH: /app/src/config/config-compose.yml
+      SECRETS_PATH: /run/secrets/jwt_secret
+    depends_on:
+      - db
+      - cache
+      - kafka
+      - zookeeper
+    ports:
+      - "8083:8080"
+    networks:
+      - app-network
+    secrets:
+      - jwt_secret
+    volumes:
+      - file-storage:/var/www/face_verification/kuzora/vectors
+  api-gateway-service:
+    build: .
+    restart: unless-stopped
+    environment:
+      CONFIG_PATH: /app/src/config/config-compose.yml
+    depends_on:
+      - auth-service
+      - face-verification-service
+      - transaction-service
+    ports:
+      - "8084:8080"
+    networks:
+      - app-network
+  db:
+    image: postgres:16.3
+    restart: unless-stopped
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=persistent
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - persistent-storage:/var/lib/postgresql/data
+    networks:
+      - app-network
+  cache:
+    image: redis:7.4.0
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - cache-storage:/root/redis
+    environment:
+      - REDIS_PASSWORD=my-password
+      - REDIS_PORT=6379
+      - REDIS_DATABASES=16
+    networks:
+      - app-network
+  kafka:
+    image: bitnami/kafka:3.4.1
+    restart: unless-stopped
+    ports:
+      - 9092:9092
+      - 9093:9093
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+    depends_on:
+      - zookeeper
+    networks:
+      - app-network
+  zookeeper:
+    image: bitnami/zookeeper:3.9.2
+    restart: unless-stopped
+    ports:
+      - 2181:2181
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    networks:
+      - app-network
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    restart: unless-stopped
+    ports:
+      - 9090:9090
+    networks:
+      - app-network
+    volumes:
+      - type: bind
+        source: ./configs/prometheus/config.yml
+        target: /prometheus/config.yml
+      - type: volume
+        source: prometheus_data
+        target: /prometheus
+    command: ["--config.file=/prometheus/config.yml", "--storage.tsdb.path=/prometheus", "--web.console.libraries=/usr/share/prometheus/console_libraries", "--web.console.templates=/usr/share/prometheus/consoles"]
+  grafana:
+    image: grafana/grafana:11.2.0-ubuntu
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+    networks:
+      - app-network
+    volumes:
+      - type: volume
+        source: grafana-storage
+        target: /var/lib/grafana
+  jaeger:
+    image: jaegertracing/all-in-one:1.60
+    restart: unless-stopped
+    environment:
+      - COLLECTOR_ZIPKIN_HTTP_PORT=9411
+    ports:
+      - 5775:5775/udp
+      - 6831:6831/udp
+      - 6832:6832/udp
+      - 5778:5778
+      - 16686:16686
+      - 14268:14268
+      - 9411:9411
+    networks:
+      - app-network
+volumes:
+  persistent-storage:
+  cache-storage:
+  file-storage:
+  prometheus_data:
+  grafana-storage:
+networks:
+  app-network:
+secrets:
+  jwt_secret:
+    file: ./src/config/secrets
