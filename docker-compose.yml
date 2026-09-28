@@ -90,7 +90,7 @@ services:
     networks:
       - app-network
   kafka:
-    image: bitnami/kafka:3.4.1
+    image: soldevelo/kafka:3.4.1
     restart: unless-stopped
     ports:
       - 9092:9092
@@ -107,7 +107,7 @@ services:
     networks:
       - app-network
   zookeeper:
-    image: bitnami/zookeeper:3.9.2
+    image: soldevelo/zookeeper:3.9.6
     restart: unless-stopped
     ports:
       - 2181:2181
